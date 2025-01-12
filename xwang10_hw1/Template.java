@@ -11,29 +11,37 @@ public class Template {
         this.zippyQuote = zippyQuote;
     }
 
-    private boolean isVariable(String s) {
-        return s.charAt(0) == '$';
-    }
+//    // Method to check if a string  is a valid variable
+//    private boolean isVariable(String s) {
+//        return true;
+//    }
 
     public String translate(Map<String, String> vars) {
         StringBuilder sb = new StringBuilder();
         for (String msg : messages) {
-            if (isVariable(msg)) {
-                // Special handling for $newline (inserts a newline before the Zippy quote)
-                if (msg.equals("$newline"))
-                    sb.append("\n");
-                // Special handling for $zippy (inserts a random Zippy quote)
-                else if (msg.equals("$zippy"))
-                    sb.append(zippyQuote.getRandomQuote());
-                // Handle greeting according to current local time
-                else if (msg.equals("$daypart"))
-                    sb.append(new DayPart());
-                // Handle other variables in the map
-                else if (vars.containsKey(msg))
-                    sb.append(vars.get(msg));
+            // Special handling for $zippy (inserts a random or sequential Zippy quote)
+            if (msg.equals("$zippy"))
+                sb.append(zippyQuote.getNextQuote());
+            // Handle greeting according to current local time
+            else if (msg.equals("$daypart"))
+                sb.append(new DayPart());
+
+            // Check if msg starts with key in the map
+            else {
+                boolean match = false;
+                // msg #1 : $newlineGood  -> \nGood
+                // msg #2: $name. -> Xiaoyuwang.
+                for(String key : vars.keySet()) {
+                    if (msg.startsWith(key)) {
+                        sb.append(vars.get(key)); // \n
+                        sb.append(msg.substring(key.length()));
+                        match = true;
+                        break;
+                    }
+                }
+                if(!match)  // msg: #3: $1.25 (no key found)
+                    sb.append(msg);
             }
-            else
-                sb.append(msg);
             sb.append(" ");
         }
         return sb.toString().trim();  // Remove any extra trailing spaces
